@@ -1,4 +1,6 @@
 __pycache__/
-*.log
+*.pyc
+data/study.db
 venv/
 .env
+*.log
