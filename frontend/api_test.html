@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>蛋仔学习追踪 - API 调试</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 p-8">
+    <div id="app" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-lg">
+        <h1 class="text-2xl font-bold mb-4 text-blue-600">🥚 API 实时调试面版</h1>
+        
+        <div class="mb-6 space-y-2">
+            <input v-model="subject" placeholder="学科" class="w-full p-2 border rounded">
+            <input v-model="duration" type="number" placeholder="时长" class="w-full p-2 border rounded">
+            <button @click="add" class="w-full bg-blue-500 text-white p-2 rounded">添加学习记录</button>
+        </div>
+
+        <div class="border-t pt-4">
+            <h2 class="font-bold mb-2">今日总计: {{ total }} 分钟</h2>
+            <ul class="text-sm space-y-1">
+                <li v-for="s in list" class="bg-gray-50 p-2 rounded">
+                    {{ s.study_date }}: {{ s.subject }} ({{ s.duration }}m)
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue
+        createApp({
+            setup() {
+                const subject = ref('')
+                const duration = ref(30)
+                const total = ref(0)
+                const list = ref([])
+
+                const refresh = async () => {
+                    total.value = (await (await fetch('http://23.95.119.227:8000/api/total')).json()).total_minutes
+                    list.value = await (await fetch('http://23.95.119.227:8000/api/today')).json()
+                }
+
+                const add = async () => {
+                    await fetch('http://23.95.119.227:8000/api/add', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ subject: subject.value, duration: duration.value })
+                    })
+                    subject.value = ''
+                    refresh()
+                }
+
+                onMounted(refresh)
+                return { subject, duration, total, list, add }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
